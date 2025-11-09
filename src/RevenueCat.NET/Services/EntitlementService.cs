@@ -1,4 +1,7 @@
 using RevenueCat.NET.Models;
+using RevenueCat.NET.Models.Common;
+using RevenueCat.NET.Models.Entitlements;
+using RevenueCat.NET.Models.Products;
 
 namespace RevenueCat.NET.Services;
 
@@ -12,7 +15,7 @@ internal sealed class EntitlementService(IHttpRequestExecutor executor) : IEntit
         CancellationToken cancellationToken = default)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(projectId);
-        
+
         var parameters = new List<string>();
         if (limit.HasValue)
         {
@@ -28,7 +31,7 @@ internal sealed class EntitlementService(IHttpRequestExecutor executor) : IEntit
         }
 
         var query = parameters.Count > 0 ? $"?{string.Join("&", parameters)}" : string.Empty;
-        
+
         return executor.ExecuteAsync<ListResponse<Entitlement>>(
             HttpMethod.Get,
             $"/projects/{projectId}/entitlements{query}",
@@ -43,7 +46,7 @@ internal sealed class EntitlementService(IHttpRequestExecutor executor) : IEntit
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(projectId);
         ArgumentException.ThrowIfNullOrWhiteSpace(entitlementId);
-        
+
         var query = QueryStringBuilder.BuildExpand(expand);
         return executor.ExecuteAsync<Entitlement>(
             HttpMethod.Get,
@@ -58,7 +61,7 @@ internal sealed class EntitlementService(IHttpRequestExecutor executor) : IEntit
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(projectId);
         ArgumentNullException.ThrowIfNull(request);
-        
+
         return executor.ExecuteAsync<Entitlement>(
             HttpMethod.Post,
             $"/projects/{projectId}/entitlements",
@@ -75,7 +78,7 @@ internal sealed class EntitlementService(IHttpRequestExecutor executor) : IEntit
         ArgumentException.ThrowIfNullOrWhiteSpace(projectId);
         ArgumentException.ThrowIfNullOrWhiteSpace(entitlementId);
         ArgumentNullException.ThrowIfNull(request);
-        
+
         return executor.ExecuteAsync<Entitlement>(
             HttpMethod.Post,
             $"/projects/{projectId}/entitlements/{entitlementId}",
@@ -90,7 +93,7 @@ internal sealed class EntitlementService(IHttpRequestExecutor executor) : IEntit
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(projectId);
         ArgumentException.ThrowIfNullOrWhiteSpace(entitlementId);
-        
+
         return executor.ExecuteAsync<DeletedObject>(
             HttpMethod.Delete,
             $"/projects/{projectId}/entitlements/{entitlementId}",
@@ -106,10 +109,27 @@ internal sealed class EntitlementService(IHttpRequestExecutor executor) : IEntit
         ArgumentException.ThrowIfNullOrWhiteSpace(projectId);
         ArgumentException.ThrowIfNullOrWhiteSpace(entitlementId);
         ArgumentNullException.ThrowIfNull(request);
-        
+
         return executor.ExecuteAsync<Entitlement>(
             HttpMethod.Post,
             $"/projects/{projectId}/entitlements/{entitlementId}/actions/attach_products",
+            request,
+            cancellationToken);
+    }
+
+    public Task<Entitlement> DetachProductsAsync(
+        string projectId,
+        string entitlementId,
+        DetachProductsRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(projectId);
+        ArgumentException.ThrowIfNullOrWhiteSpace(entitlementId);
+        ArgumentNullException.ThrowIfNull(request);
+
+        return executor.ExecuteAsync<Entitlement>(
+            HttpMethod.Post,
+            $"/projects/{projectId}/entitlements/{entitlementId}/actions/detach_products",
             request,
             cancellationToken);
     }
@@ -123,7 +143,7 @@ internal sealed class EntitlementService(IHttpRequestExecutor executor) : IEntit
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(projectId);
         ArgumentException.ThrowIfNullOrWhiteSpace(entitlementId);
-        
+
         var query = QueryStringBuilder.Build(limit, startingAfter);
         return executor.ExecuteAsync<ListResponse<Product>>(
             HttpMethod.Get,

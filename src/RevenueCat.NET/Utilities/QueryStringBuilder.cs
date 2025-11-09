@@ -2,7 +2,7 @@ namespace RevenueCat.NET;
 
 internal static class QueryStringBuilder
 {
-    public static string Build(int? limit = null, string? startingAfter = null, string? search = null)
+    public static string Build(int? limit = null, string? startingAfter = null, string? search = null, string? environment = null)
     {
         var parameters = new List<string>();
         
@@ -21,6 +21,26 @@ internal static class QueryStringBuilder
             parameters.Add($"search={Uri.EscapeDataString(search)}");
         }
 
+        if (!string.IsNullOrWhiteSpace(environment))
+        {
+            parameters.Add($"environment={Uri.EscapeDataString(environment)}");
+        }
+
+        return parameters.Count > 0 ? $"?{string.Join("&", parameters)}" : string.Empty;
+    }
+
+    public static string Build(Dictionary<string, string?> queryParams)
+    {
+        var parameters = new List<string>();
+
+        foreach (var kvp in queryParams)
+        {
+            if (!string.IsNullOrWhiteSpace(kvp.Value))
+            {
+                parameters.Add($"{kvp.Key}={Uri.EscapeDataString(kvp.Value)}");
+            }
+        }
+
         return parameters.Count > 0 ? $"?{string.Join("&", parameters)}" : string.Empty;
     }
 
@@ -33,5 +53,15 @@ internal static class QueryStringBuilder
 
         var expandParam = string.Join(",", expand.Select(Uri.EscapeDataString));
         return $"?expand={expandParam}";
+    }
+
+    public static string BuildWithBoolParam(string paramName, bool? paramValue)
+    {
+        if (!paramValue.HasValue)
+        {
+            return string.Empty;
+        }
+
+        return $"?{paramName}={paramValue.Value.ToString().ToLowerInvariant()}";
     }
 }

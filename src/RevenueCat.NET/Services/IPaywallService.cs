@@ -1,4 +1,4 @@
-using RevenueCat.NET.Models;
+using RevenueCat.NET.Models.Paywalls;
 
 namespace RevenueCat.NET.Services;
 

@@ -1,4 +1,6 @@
 using RevenueCat.NET.Models;
+using RevenueCat.NET.Models.Apps;
+using RevenueCat.NET.Models.Common;
 
 namespace RevenueCat.NET.Services;
 
@@ -11,7 +13,7 @@ internal sealed class AppService(IHttpRequestExecutor executor) : IAppService
         CancellationToken cancellationToken = default)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(projectId);
-        
+
         var query = QueryStringBuilder.Build(limit, startingAfter);
         return executor.ExecuteAsync<ListResponse<App>>(
             HttpMethod.Get,
@@ -26,7 +28,7 @@ internal sealed class AppService(IHttpRequestExecutor executor) : IAppService
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(projectId);
         ArgumentException.ThrowIfNullOrWhiteSpace(appId);
-        
+
         return executor.ExecuteAsync<App>(
             HttpMethod.Get,
             $"/projects/{projectId}/apps/{appId}",
@@ -40,7 +42,7 @@ internal sealed class AppService(IHttpRequestExecutor executor) : IAppService
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(projectId);
         ArgumentNullException.ThrowIfNull(request);
-        
+
         return executor.ExecuteAsync<App>(
             HttpMethod.Post,
             $"/projects/{projectId}/apps",
@@ -57,7 +59,7 @@ internal sealed class AppService(IHttpRequestExecutor executor) : IAppService
         ArgumentException.ThrowIfNullOrWhiteSpace(projectId);
         ArgumentException.ThrowIfNullOrWhiteSpace(appId);
         ArgumentNullException.ThrowIfNull(request);
-        
+
         return executor.ExecuteAsync<App>(
             HttpMethod.Post,
             $"/projects/{projectId}/apps/{appId}",
@@ -72,10 +74,41 @@ internal sealed class AppService(IHttpRequestExecutor executor) : IAppService
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(projectId);
         ArgumentException.ThrowIfNullOrWhiteSpace(appId);
-        
+
         return executor.ExecuteAsync<DeletedObject>(
             HttpMethod.Delete,
             $"/projects/{projectId}/apps/{appId}",
+            cancellationToken: cancellationToken);
+    }
+
+    public Task<ListResponse<PublicApiKey>> ListPublicApiKeysAsync(
+        string projectId,
+        string appId,
+        int? limit = null,
+        string? startingAfter = null,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(projectId);
+        ArgumentException.ThrowIfNullOrWhiteSpace(appId);
+
+        var query = QueryStringBuilder.Build(limit, startingAfter);
+        return executor.ExecuteAsync<ListResponse<PublicApiKey>>(
+            HttpMethod.Get,
+            $"/projects/{projectId}/apps/{appId}/public_api_keys{query}",
+            cancellationToken: cancellationToken);
+    }
+
+    public Task<StoreKitConfigFile> GetStoreKitConfigAsync(
+        string projectId,
+        string appId,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(projectId);
+        ArgumentException.ThrowIfNullOrWhiteSpace(appId);
+
+        return executor.ExecuteAsync<StoreKitConfigFile>(
+            HttpMethod.Get,
+            $"/projects/{projectId}/apps/{appId}/storekit_config",
             cancellationToken: cancellationToken);
     }
 }

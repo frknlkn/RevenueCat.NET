@@ -1,25 +1,53 @@
-namespace RevenueCat.NET.Models;
+using System.Text.Json.Serialization;
+using RevenueCat.NET.Models.Enums;
+using RevenueCat.NET.Models.Subscriptions;
 
-public sealed record Product(
-    string Object,
-    string Id,
-    string StoreIdentifier,
-    ProductType Type,
-    long CreatedAt,
-    string AppId,
-    string? DisplayName = null,
-    SubscriptionDetails? Subscription = null,
-    App? App = null
-);
+namespace RevenueCat.NET.Models.Products;
 
-public enum ProductType
+/// <summary>
+/// Represents a product in RevenueCat.
+/// </summary>
+public class Product : BaseModel
 {
-    Subscription,
-    OneTime
+    /// <summary>
+    /// The store-specific product identifier.
+    /// </summary>
+    [JsonPropertyName("store_identifier")]
+    public string StoreIdentifier { get; set; } = string.Empty;
+    
+    /// <summary>
+    /// The type of product.
+    /// </summary>
+    [JsonPropertyName("type")]
+    public ProductType Type { get; set; }
+    
+    /// <summary>
+    /// Subscription-specific details (only present for subscription products).
+    /// </summary>
+    [JsonPropertyName("subscription")]
+    public SubscriptionProduct? Subscription { get; set; }
+    
+    /// <summary>
+    /// One-time purchase details (only present for one-time products).
+    /// </summary>
+    [JsonPropertyName("one_time")]
+    public OneTimeProduct? OneTime { get; set; }
+    
+    /// <summary>
+    /// The app ID this product belongs to.
+    /// </summary>
+    [JsonPropertyName("app_id")]
+    public string AppId { get; set; } = string.Empty;
+    
+    /// <summary>
+    /// The app this product belongs to (expandable).
+    /// </summary>
+    [JsonPropertyName("app")]
+    public object? App { get; set; }
+    
+    /// <summary>
+    /// The display name of the product.
+    /// </summary>
+    [JsonPropertyName("display_name")]
+    public string? DisplayName { get; set; }
 }
-
-public sealed record SubscriptionDetails(
-    string Duration,
-    string? GracePeriodDuration = null,
-    string? TrialDuration = null
-);

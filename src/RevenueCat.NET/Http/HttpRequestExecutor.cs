@@ -1,9 +1,11 @@
 using System.Net;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using RevenueCat.NET.Configuration;
 using RevenueCat.NET.Exceptions;
 using RevenueCat.NET.Models;
+using RevenueCat.NET.Models.Enums;
 
 namespace RevenueCat.NET;
 
@@ -12,15 +14,21 @@ internal sealed class HttpRequestExecutor(HttpClient httpClient, RevenueCatOptio
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
         PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower,
-        DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull,
-        WriteIndented = false
+        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+        PropertyNameCaseInsensitive = true,
+        WriteIndented = false,
+        Converters =
+        {
+            new JsonStringEnumConverter(JsonNamingPolicy.SnakeCaseLower, allowIntegerValues: false)
+        }
     };
 
     public async Task<TResponse> ExecuteAsync<TResponse>(
         HttpMethod method,
         string endpoint,
         object? body = null,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default,
+        string? idempotencyKey = null)
     {
         var attempt = 0;
         Exception? lastException = null;
@@ -29,7 +37,7 @@ internal sealed class HttpRequestExecutor(HttpClient httpClient, RevenueCatOptio
         {
             try
             {
-                using var request = CreateRequest(method, endpoint, body);
+                using var request = CreateRequest(method, endpoint, body, idempotencyKey);
                 using var response = await httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
 
                 if (response.IsSuccessStatusCode)
@@ -68,12 +76,13 @@ internal sealed class HttpRequestExecutor(HttpClient httpClient, RevenueCatOptio
         HttpMethod method,
         string endpoint,
         object? body = null,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default,
+        string? idempotencyKey = null)
     {
-        await ExecuteAsync<object>(method, endpoint, body, cancellationToken).ConfigureAwait(false);
+        await ExecuteAsync<object>(method, endpoint, body, cancellationToken, idempotencyKey).ConfigureAwait(false);
     }
 
-    private static HttpRequestMessage CreateRequest(HttpMethod method, string endpoint, object? body)
+    private static HttpRequestMessage CreateRequest(HttpMethod method, string endpoint, object? body, string? idempotencyKey = null)
     {
         var request = new HttpRequestMessage(method, endpoint);
 
@@ -81,6 +90,11 @@ internal sealed class HttpRequestExecutor(HttpClient httpClient, RevenueCatOptio
         {
             var json = JsonSerializer.Serialize(body, JsonOptions);
             request.Content = new StringContent(json, Encoding.UTF8, "application/json");
+        }
+
+        if (!string.IsNullOrWhiteSpace(idempotencyKey))
+        {
+            request.Headers.Add("Idempotency-Key", idempotencyKey);
         }
 
         return request;
@@ -105,28 +119,57 @@ internal sealed class HttpRequestExecutor(HttpClient httpClient, RevenueCatOptio
     private static async Task ThrowRevenueCatExceptionAsync(HttpResponseMessage response, CancellationToken cancellationToken)
     {
         var content = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
+        var statusCode = (int)response.StatusCode;
         
-        ErrorResponse? error = null;
+        // Try to deserialize new error format
+        RevenueCatError? structuredError = null;
+        ErrorResponse? legacyError = null;
+        
         try
         {
-            error = JsonSerializer.Deserialize<ErrorResponse>(content, JsonOptions);
+            structuredError = JsonSerializer.Deserialize<RevenueCatError>(content, JsonOptions);
         }
         catch
         {
-            // Ignore deserialization errors
+            // Try legacy format
+            try
+            {
+                legacyError = JsonSerializer.Deserialize<ErrorResponse>(content, JsonOptions);
+            }
+            catch
+            {
+                // Ignore deserialization errors
+            }
         }
 
+        // If we have structured error, throw typed exception based on error type
+        if (structuredError != null)
+        {
+            throw structuredError.Type switch
+            {
+                ErrorType.ParameterError => new RevenueCatParameterException(structuredError, statusCode),
+                ErrorType.ResourceMissing => new RevenueCatResourceNotFoundException(structuredError, statusCode),
+                ErrorType.ResourceAlreadyExists => new RevenueCatConflictException(structuredError, statusCode),
+                ErrorType.IdempotencyError => new RevenueCatConflictException(structuredError, statusCode),
+                ErrorType.RateLimitError => new RevenueCatRateLimitException(structuredError, statusCode),
+                ErrorType.AuthenticationError => new RevenueCatAuthenticationException(structuredError, statusCode),
+                ErrorType.AuthorizationError => new RevenueCatAuthorizationException(structuredError, statusCode),
+                _ => new RevenueCatException(structuredError, statusCode)
+            };
+        }
+
+        // Fall back to legacy exception handling
         throw response.StatusCode switch
         {
-            HttpStatusCode.BadRequest => new BadRequestException(error?.Message ?? "Bad request", error),
-            HttpStatusCode.Unauthorized => new UnauthorizedException(error?.Message ?? "Unauthorized", error),
-            HttpStatusCode.Forbidden => new ForbiddenException(error?.Message ?? "Forbidden", error),
-            HttpStatusCode.NotFound => new NotFoundException(error?.Message ?? "Resource not found", error),
-            HttpStatusCode.Conflict => new ConflictException(error?.Message ?? "Conflict", error),
-            (HttpStatusCode)422 => new UnprocessableEntityException(error?.Message ?? "Unprocessable entity", error),
-            (HttpStatusCode)423 => new LockedException(error?.Message ?? "Resource locked", error),
-            HttpStatusCode.TooManyRequests => new RateLimitException(error?.Message ?? "Rate limit exceeded", error),
-            _ => new RevenueCatException($"Request failed with status {response.StatusCode}", error)
+            HttpStatusCode.BadRequest => new BadRequestException(legacyError?.Message ?? "Bad request", legacyError),
+            HttpStatusCode.Unauthorized => new UnauthorizedException(legacyError?.Message ?? "Unauthorized", legacyError),
+            HttpStatusCode.Forbidden => new ForbiddenException(legacyError?.Message ?? "Forbidden", legacyError),
+            HttpStatusCode.NotFound => new NotFoundException(legacyError?.Message ?? "Resource not found", legacyError),
+            HttpStatusCode.Conflict => new ConflictException(legacyError?.Message ?? "Conflict", legacyError),
+            (HttpStatusCode)422 => new UnprocessableEntityException(legacyError?.Message ?? "Unprocessable entity", legacyError),
+            (HttpStatusCode)423 => new LockedException(legacyError?.Message ?? "Resource locked", legacyError),
+            HttpStatusCode.TooManyRequests => new RateLimitException(legacyError?.Message ?? "Rate limit exceeded", legacyError),
+            _ => new RevenueCatException($"Request failed with status {response.StatusCode}", legacyError)
         };
     }
 

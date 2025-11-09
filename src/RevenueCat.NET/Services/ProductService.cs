@@ -1,4 +1,6 @@
 using RevenueCat.NET.Models;
+using RevenueCat.NET.Models.Common;
+using RevenueCat.NET.Models.Products;
 
 namespace RevenueCat.NET.Services;
 
@@ -13,7 +15,7 @@ internal sealed class ProductService(IHttpRequestExecutor executor) : IProductSe
         CancellationToken cancellationToken = default)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(projectId);
-        
+
         var parameters = new List<string>();
         if (!string.IsNullOrWhiteSpace(appId))
         {
@@ -33,7 +35,7 @@ internal sealed class ProductService(IHttpRequestExecutor executor) : IProductSe
         }
 
         var query = parameters.Count > 0 ? $"?{string.Join("&", parameters)}" : string.Empty;
-        
+
         return executor.ExecuteAsync<ListResponse<Product>>(
             HttpMethod.Get,
             $"/projects/{projectId}/products{query}",
@@ -48,7 +50,7 @@ internal sealed class ProductService(IHttpRequestExecutor executor) : IProductSe
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(projectId);
         ArgumentException.ThrowIfNullOrWhiteSpace(productId);
-        
+
         var query = QueryStringBuilder.BuildExpand(expand);
         return executor.ExecuteAsync<Product>(
             HttpMethod.Get,
@@ -63,7 +65,7 @@ internal sealed class ProductService(IHttpRequestExecutor executor) : IProductSe
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(projectId);
         ArgumentNullException.ThrowIfNull(request);
-        
+
         return executor.ExecuteAsync<Product>(
             HttpMethod.Post,
             $"/projects/{projectId}/products",
@@ -78,10 +80,27 @@ internal sealed class ProductService(IHttpRequestExecutor executor) : IProductSe
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(projectId);
         ArgumentException.ThrowIfNullOrWhiteSpace(productId);
-        
+
         return executor.ExecuteAsync<DeletedObject>(
             HttpMethod.Delete,
             $"/projects/{projectId}/products/{productId}",
             cancellationToken: cancellationToken);
+    }
+
+    public Task<StoreProduct> CreateProductInStoreAsync(
+        string projectId,
+        string productId,
+        object createInput,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(projectId);
+        ArgumentException.ThrowIfNullOrWhiteSpace(productId);
+        ArgumentNullException.ThrowIfNull(createInput);
+
+        return executor.ExecuteAsync<StoreProduct>(
+            HttpMethod.Post,
+            $"/projects/{projectId}/products/{productId}/actions/create_product_in_store",
+            createInput,
+            cancellationToken);
     }
 }

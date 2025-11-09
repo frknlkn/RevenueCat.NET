@@ -33,6 +33,12 @@ bld/
 
 # VS Code
 .vscode/
+# Kiro
+
+.kiro/
+
+# github
+.github/
 
 # Mac
 .DS_Store

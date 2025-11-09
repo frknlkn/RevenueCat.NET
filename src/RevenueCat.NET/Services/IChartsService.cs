@@ -1,26 +1,11 @@
-using RevenueCat.NET.Models;
+using RevenueCat.NET.Models.Charts;
 
 namespace RevenueCat.NET.Services;
 
 public interface IChartsService
 {
-    Task<ChartResponse> GetMetricsAsync(
+    Task<OverviewMetrics> GetMetricsAsync(
         string projectId,
-        ChartMetricType metric,
-        long startDate,
-        long endDate,
-        string? appId = null,
+        string? currency = null,
         CancellationToken cancellationToken = default);
-}
-
-public enum ChartMetricType
-{
-    ActiveSubscriptions,
-    ActiveTrials,
-    Revenue,
-    Mrr,
-    Arr,
-    NewSubscribers,
-    Churn,
-    Refunds
 }

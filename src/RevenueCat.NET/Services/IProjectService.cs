@@ -1,4 +1,5 @@
-using RevenueCat.NET.Models;
+using RevenueCat.NET.Models.Common;
+using RevenueCat.NET.Models.Projects;
 
 namespace RevenueCat.NET.Services;
 

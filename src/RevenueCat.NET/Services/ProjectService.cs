@@ -1,4 +1,5 @@
-using RevenueCat.NET.Models;
+using RevenueCat.NET.Models.Common;
+using RevenueCat.NET.Models.Projects;
 
 namespace RevenueCat.NET.Services;
 
@@ -19,7 +20,7 @@ internal sealed class ProjectService(IHttpRequestExecutor executor) : IProjectSe
     public Task<Project> GetAsync(string projectId, CancellationToken cancellationToken = default)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(projectId);
-        
+
         return executor.ExecuteAsync<Project>(
             HttpMethod.Get,
             $"/projects/{projectId}",
@@ -29,12 +30,12 @@ internal sealed class ProjectService(IHttpRequestExecutor executor) : IProjectSe
     private static string BuildQueryString(int? limit, string? startingAfter)
     {
         var parameters = new List<string>();
-        
+
         if (limit.HasValue)
         {
             parameters.Add($"limit={limit.Value}");
         }
-        
+
         if (!string.IsNullOrWhiteSpace(startingAfter))
         {
             parameters.Add($"starting_after={Uri.EscapeDataString(startingAfter)}");

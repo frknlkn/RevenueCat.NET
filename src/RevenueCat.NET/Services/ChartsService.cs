@@ -1,36 +1,28 @@
-using RevenueCat.NET.Models;
+using RevenueCat.NET.Models.Charts;
 
 namespace RevenueCat.NET.Services;
 
 internal sealed class ChartsService(IHttpRequestExecutor executor) : IChartsService
 {
-    public Task<ChartResponse> GetMetricsAsync(
+    public Task<OverviewMetrics> GetMetricsAsync(
         string projectId,
-        ChartMetricType metric,
-        long startDate,
-        long endDate,
-        string? appId = null,
+        string? currency = null,
         CancellationToken cancellationToken = default)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(projectId);
         
-        var parameters = new List<string>
-        {
-            $"metric={metric.ToString().ToLowerInvariant()}",
-            $"start_date={startDate}",
-            $"end_date={endDate}"
-        };
+        var parameters = new List<string>();
         
-        if (!string.IsNullOrWhiteSpace(appId))
+        if (!string.IsNullOrWhiteSpace(currency))
         {
-            parameters.Add($"app_id={Uri.EscapeDataString(appId)}");
+            parameters.Add($"currency={Uri.EscapeDataString(currency)}");
         }
 
-        var query = $"?{string.Join("&", parameters)}";
+        var query = parameters.Count > 0 ? $"?{string.Join("&", parameters)}" : string.Empty;
         
-        return executor.ExecuteAsync<ChartResponse>(
+        return executor.ExecuteAsync<OverviewMetrics>(
             HttpMethod.Get,
-            $"/projects/{projectId}/metrics{query}",
+            $"/projects/{projectId}/overview_metrics{query}",
             cancellationToken: cancellationToken);
     }
 }

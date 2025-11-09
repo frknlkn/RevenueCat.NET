@@ -7,14 +7,15 @@ A professional, production-ready .NET 8 client library for the RevenueCat REST A
 
 ## Features
 
-- **Full API Coverage**: Complete implementation of RevenueCat REST API v2
+- **Complete API Coverage**: Full implementation of RevenueCat REST API v2 with 100+ endpoints
 - **Modern .NET 8**: Built with latest C# features (primary constructors, records, file-scoped namespaces)
 - **SOLID Principles**: Clean architecture with dependency injection support
-- **Type-Safe**: Strong typing with nullable reference types enabled
+- **Type-Safe**: Strong typing with nullable reference types and comprehensive models
 - **Async/Await**: Fully asynchronous API with cancellation token support
 - **Resilient**: Built-in retry logic, rate limiting handling, and timeout management
 - **Performance**: Connection pooling, HTTP compression, and efficient JSON serialization
 - **Extensible**: Interface-based design for easy testing and mocking
+- **Well-Documented**: Comprehensive XML documentation and usage examples
 
 ## Installation
 
@@ -201,23 +202,192 @@ services.AddSingleton<IRevenueCatClient>(sp =>
 
 ## API Coverage
 
-- ✅ Projects
-- ✅ Apps (App Store, Play Store, Stripe, Amazon, Roku, Paddle, Web Billing)
-- ✅ Customers (with transfer support)
-- ✅ Products
-- ✅ Entitlements (with product attachment)
-- ✅ Offerings (with default offering support)
-- ✅ Packages
-- ✅ Paywalls
-- ✅ Subscriptions (with cancel/refund actions)
-- ✅ Purchases (with refund support)
-- ✅ Invoices
-- ✅ Charts & Metrics
+### Core Resources
+- ✅ **Projects** - List and manage projects
+- ✅ **Apps** - Full CRUD operations for all store types
+- ✅ **Customers** - Complete customer lifecycle management
+- ✅ **Products** - Product catalog management
+- ✅ **Entitlements** - Entitlement configuration and product attachment
+- ✅ **Offerings** - Offering management with metadata support
+- ✅ **Packages** - Package configuration with eligibility criteria
+- ✅ **Paywalls** - Paywall creation and management
+
+### Transactions & Billing
+- ✅ **Subscriptions** - List, search, cancel, refund operations
+- ✅ **Purchases** - One-time purchase management and refunds
+- ✅ **Invoices** - Invoice retrieval and file access
+- ✅ **Virtual Currency** - Balance management and transactions
+
+### Analytics & Search
+- ✅ **Charts & Metrics** - Revenue, MRR, ARR, churn, and more
+- ✅ **Search** - Search subscriptions and purchases by store identifiers
+
+### Advanced Features
+- ✅ **Customer Transfer** - Transfer data between customers
+- ✅ **Customer Attributes** - Manage custom attributes
+- ✅ **Customer Aliases** - List customer aliases
+- ✅ **Active Entitlements** - Query customer entitlements
+- ✅ **Authenticated Management URLs** - Generate customer portal links
+- ✅ **Store Product Creation** - Push products to App Store Connect
+- ✅ **Expandable Fields** - Reduce API calls with field expansion
+- ✅ **Pagination** - Efficient handling of large datasets
+
+### Supported Stores
+- ✅ Apple App Store
+- ✅ Apple Mac App Store
+- ✅ Google Play Store
+- ✅ Amazon Appstore
+- ✅ Stripe
+- ✅ RevenueCat Billing (Web)
+- ✅ Roku
+- ✅ Paddle
+- ✅ Promotional
+
+## Examples
+
+Comprehensive examples are available in the [`examples/`](examples/) directory:
+
+- **[BasicUsage](examples/BasicUsage/)** - Quick start guide
+- **[CustomerManagement](examples/CustomerManagement/)** - Customer CRUD, attributes, transfer
+- **[SubscriptionManagement](examples/SubscriptionManagement/)** - Subscription lifecycle, cancel, refund
+- **[ProductCatalog](examples/ProductCatalog/)** - Products, entitlements, offerings, packages
+- **[ErrorHandling](examples/ErrorHandling/)** - Error handling patterns and retry logic
+- **[VirtualCurrency](examples/VirtualCurrency/)** - Virtual currency management
+- **[Pagination](examples/Pagination/)** - Efficient pagination techniques
+
+See the [examples README](examples/README.md) for detailed information.
+
+## Advanced Usage
+
+### Expandable Fields
+
+Reduce API calls by expanding related resources:
+
+```csharp
+var customer = await client.Customers.GetAsync(
+    projectId,
+    customerId,
+    expand: new[] { "attributes", "active_entitlements" }
+);
+
+// Access expanded data directly
+foreach (var attr in customer.Attributes.Items)
+{
+    Console.WriteLine($"{attr.Key}: {attr.Value}");
+}
+```
+
+### Pagination
+
+Efficiently handle large datasets:
+
+```csharp
+string? startingAfter = null;
+do
+{
+    var page = await client.Customers.ListAsync(
+        projectId,
+        limit: 100,
+        startingAfter: startingAfter
+    );
+    
+    // Process page.Items
+    
+    // Get cursor for next page
+    if (page.NextPage != null)
+    {
+        var uri = new Uri(page.NextPage);
+        var query = HttpUtility.ParseQueryString(uri.Query);
+        startingAfter = query["starting_after"];
+    }
+    else
+    {
+        startingAfter = null;
+    }
+} while (startingAfter != null);
+```
+
+### Search Operations
+
+Search by store identifiers:
+
+```csharp
+// Search subscriptions
+var subscriptions = await client.Subscriptions.SearchSubscriptionsAsync(
+    projectId,
+    storeSubscriptionIdentifier: "GPA.1234-5678-9012-34567"
+);
+
+// Search purchases
+var purchases = await client.Purchases.SearchPurchasesAsync(
+    projectId,
+    storePurchaseIdentifier: "1000000123456789"
+);
+```
+
+### Virtual Currency
+
+Manage in-app currencies:
+
+```csharp
+// Add currency
+var balance = await client.Customers.CreateVirtualCurrencyTransactionAsync(
+    projectId,
+    customerId,
+    new CreateVirtualCurrencyTransactionRequest("GEMS", 100),
+    idempotencyKey: "unique-key"
+);
+
+// Deduct currency
+await client.Customers.CreateVirtualCurrencyTransactionAsync(
+    projectId,
+    customerId,
+    new CreateVirtualCurrencyTransactionRequest("GEMS", -25),
+    idempotencyKey: "another-unique-key"
+);
+```
+
+### Customer Transfer
+
+Transfer data between customers:
+
+```csharp
+var transfer = await client.Customers.TransferAsync(
+    projectId,
+    sourceCustomerId,
+    new TransferCustomerRequest(
+        TargetCustomerId: targetCustomerId,
+        AppIds: new[] { "app_123" } // Optional: filter by apps
+    )
+);
+```
+
+## API Coverage Matrix
+
+| Resource | List | Get | Create | Update | Delete | Actions |
+|----------|------|-----|--------|--------|--------|---------|
+| Projects | ✅ | - | - | - | - | - |
+| Apps | ✅ | ✅ | ✅ | ✅ | ✅ | Get StoreKit Config, List API Keys |
+| Customers | ✅ | ✅ | ✅ | - | ✅ | Transfer, List Aliases, Manage Attributes |
+| Products | ✅ | ✅ | ✅ | - | ✅ | Create in Store |
+| Entitlements | ✅ | ✅ | ✅ | ✅ | ✅ | Attach/Detach Products |
+| Offerings | ✅ | ✅ | ✅ | ✅ | ✅ | Set Default |
+| Packages | ✅ | ✅ | ✅ | ✅ | ✅ | Attach/Detach Products |
+| Paywalls | - | - | ✅ | - | - | - |
+| Subscriptions | ✅ | ✅ | - | - | - | Cancel, Refund, Get Management URL, List Transactions |
+| Purchases | ✅ | ✅ | - | - | - | Refund |
+| Invoices | ✅ | - | - | - | - | Get File URL |
+| Charts | - | ✅ | - | - | - | Get Overview Metrics |
+| Virtual Currency | ✅ | - | ✅ | ✅ | - | - |
 
 ## Requirements
 
 - .NET 8.0 or higher
 - RevenueCat API v2 key
+
+## Migration from v1.x
+
+See [MIGRATION.md](MIGRATION.md) for detailed migration instructions from version 1.x to 2.0.
 
 ## License
 
@@ -236,3 +406,4 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 For issues and questions:
 - GitHub Issues: [Create an issue](https://github.com/frknlkn/revenuecat-dotnet/issues)
 - RevenueCat Documentation: [https://www.revenuecat.com/docs/api-v2](https://www.revenuecat.com/docs/api-v2)
+- Examples: [examples/](examples/)

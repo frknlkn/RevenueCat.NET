@@ -6,11 +6,13 @@ internal interface IHttpRequestExecutor
         HttpMethod method,
         string endpoint,
         object? body = null,
-        CancellationToken cancellationToken = default);
+        CancellationToken cancellationToken = default,
+        string? idempotencyKey = null);
 
     Task ExecuteAsync(
         HttpMethod method,
         string endpoint,
         object? body = null,
-        CancellationToken cancellationToken = default);
+        CancellationToken cancellationToken = default,
+        string? idempotencyKey = null);
 }

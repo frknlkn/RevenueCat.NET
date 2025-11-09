@@ -1,8 +1,15 @@
-namespace RevenueCat.NET.Models;
+using System.Text.Json.Serialization;
 
-public sealed record Project(
-    string Object,
-    string Id,
-    string Name,
-    long CreatedAt
-);
+namespace RevenueCat.NET.Models.Projects;
+
+/// <summary>
+/// Represents a project in RevenueCat.
+/// </summary>
+public class Project : BaseModel
+{
+    /// <summary>
+    /// The name of the project.
+    /// </summary>
+    [JsonPropertyName("name")]
+    public string Name { get; set; } = string.Empty;
+}
