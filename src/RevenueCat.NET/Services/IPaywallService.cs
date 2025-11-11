@@ -1,12 +1,14 @@
+using Refit;
 using RevenueCat.NET.Models.Paywalls;
 
 namespace RevenueCat.NET.Services;
 
 public interface IPaywallService
 {
+    [Post("/v2/projects/{projectId}/paywalls")]
     Task<Paywall> CreateAsync(
         string projectId,
-        CreatePaywallRequest request,
+        [Body] CreatePaywallRequest request,
         CancellationToken cancellationToken = default);
 }
 

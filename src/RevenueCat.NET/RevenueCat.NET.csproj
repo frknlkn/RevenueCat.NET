@@ -6,22 +6,23 @@
     <Nullable>enable</Nullable>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <PackageId>RevenueCat.NET</PackageId>
-    <Version>2.0.0</Version>
+    <Version>2.0.1</Version>
     <Authors>frknlkn</Authors>
     <Company>frknlkn</Company>
-    <Description>A comprehensive, production-ready .NET 8 client library for RevenueCat REST API v2. Complete implementation with 50+ models, 20+ enums, full CRUD operations, pagination, expandable fields, search, virtual currency, subscription management, and advanced error handling. Supports all platforms: iOS, Android, Web, Stripe, Amazon, Roku, and Paddle.</Description>
-    <PackageTags>revenuecat;subscriptions;iap;in-app-purchase;monetization;rest-api;dotnet8;async;stripe;appstore;playstore;amazon;roku;paddle;virtual-currency;analytics;invoices;paywalls;offerings;entitlements</PackageTags>
+    <Description>A comprehensive, production-ready .NET 8 client library for RevenueCat REST API v2. Built with Refit for type-safe HTTP calls. Complete implementation with 50+ models, 20+ enums, full CRUD operations, pagination, expandable fields, search, virtual currency, subscription management, and advanced error handling. Supports all platforms: iOS, Android, Web, Stripe, Amazon, Roku, and Paddle.</Description>
+    <PackageTags>revenuecat;subscriptions;iap;in-app-purchase;monetization;rest-api;dotnet8;async;refit;stripe;appstore;playstore;amazon;roku;paddle;virtual-currency;analytics;invoices;paywalls;offerings;entitlements</PackageTags>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <RepositoryUrl>https://github.com/frknlkn/revenuecat-dotnet</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageProjectUrl>https://github.com/frknlkn/revenuecat-dotnet</PackageProjectUrl>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <Copyright>Copyright (c) 2025 frknlkn</Copyright>
-    <PackageReleaseNotes>Major v2.0.0 release with complete API coverage: 50+ new models, 20+ enums, comprehensive service methods, pagination, expandable fields, search functionality, virtual currency support, subscription lifecycle management, enhanced error handling with typed exceptions, and extensive documentation. See CHANGELOG.md for full details and MIGRATION.md for upgrade guide.</PackageReleaseNotes>
+    <PackageReleaseNotes>v2.0.1: Migrated to Refit for improved HTTP handling. All endpoints now use type-safe Refit client. Fixes URL construction issues and improves reliability.</PackageReleaseNotes>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
     <EmbedUntrackedSources>true</EmbedUntrackedSources>
     <IncludeSymbols>true</IncludeSymbols>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <PackageIcon>icon.png</PackageIcon>
   </PropertyGroup>
 
   <ItemGroup>
@@ -29,11 +30,14 @@
     <PackageReference Include="Microsoft.Extensions.Http" Version="8.0.0" />
     <PackageReference Include="Polly" Version="8.2.0" />
     <PackageReference Include="Polly.Extensions.Http" Version="3.0.0" />
+    <PackageReference Include="Refit" Version="7.2.22" />
+    <PackageReference Include="Refit.HttpClientFactory" Version="7.2.22" />
   </ItemGroup>
 
   <ItemGroup>
     <None Include="..\..\README.md" Pack="true" PackagePath="\" />
-    <None Include="icon.png" Pack="true" PackagePath="\" />
+    <None Include="icon.png" Pack="true" PackagePath="\"/>
+
   </ItemGroup>
 
 </Project>

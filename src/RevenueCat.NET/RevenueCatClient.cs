@@ -1,5 +1,8 @@
+using Refit;
 using RevenueCat.NET.Configuration;
 using RevenueCat.NET.Services;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace RevenueCat.NET;
 
@@ -26,28 +29,42 @@ public sealed class RevenueCatClient : IRevenueCatClient
     public RevenueCatClient(RevenueCatOptions options)
     {
         ArgumentNullException.ThrowIfNull(options);
-        
-        var httpClient = HttpClientFactory.Create(options);
-        var requestExecutor = new HttpRequestExecutor(httpClient, options);
 
-        Projects = new ProjectService(requestExecutor);
-        Apps = new AppService(requestExecutor);
-        Customers = new CustomerService(requestExecutor);
-        Products = new ProductService(requestExecutor);
-        Entitlements = new EntitlementService(requestExecutor);
-        Offerings = new OfferingService(requestExecutor);
-        Packages = new PackageService(requestExecutor);
-        Subscriptions = new SubscriptionService(requestExecutor);
-        Purchases = new PurchaseService(requestExecutor);
-        Invoices = new InvoiceService(requestExecutor);
-        Paywalls = new PaywallService(requestExecutor);
-        Charts = new ChartsService(requestExecutor);
+        var httpClient = HttpClientFactory.Create(options);
+
+        var refitSettings = new RefitSettings
+        {
+            ContentSerializer = new SystemTextJsonContentSerializer(new JsonSerializerOptions
+            {
+                PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower,
+                DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+                PropertyNameCaseInsensitive = true,
+                WriteIndented = false,
+                Converters =
+                {
+                    new JsonStringEnumConverter(JsonNamingPolicy.SnakeCaseLower, allowIntegerValues: false)
+                }
+            })
+        };
+
+        Projects = RestService.For<IProjectService>(httpClient, refitSettings);
+        Apps = RestService.For<IAppService>(httpClient, refitSettings);
+        Customers = RestService.For<ICustomerService>(httpClient, refitSettings);
+        Products = RestService.For<IProductService>(httpClient, refitSettings);
+        Entitlements = RestService.For<IEntitlementService>(httpClient, refitSettings);
+        Offerings = RestService.For<IOfferingService>(httpClient, refitSettings);
+        Packages = RestService.For<IPackageService>(httpClient, refitSettings);
+        Subscriptions = RestService.For<ISubscriptionService>(httpClient, refitSettings);
+        Purchases = RestService.For<IPurchaseService>(httpClient, refitSettings);
+        Invoices = RestService.For<IInvoiceService>(httpClient, refitSettings);
+        Paywalls = RestService.For<IPaywallService>(httpClient, refitSettings);
+        Charts = RestService.For<IChartsService>(httpClient, refitSettings);
     }
 
     private static RevenueCatOptions CreateOptions(string apiKey, Action<RevenueCatOptions>? configure)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(apiKey);
-        
+
         var options = new RevenueCatOptions { ApiKey = apiKey };
         configure?.Invoke(options);
         return options;

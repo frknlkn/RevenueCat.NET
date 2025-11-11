@@ -23,7 +23,7 @@ internal static class HttpClientFactory
 
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", options.ApiKey);
         client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-        client.DefaultRequestHeaders.UserAgent.ParseAdd("RevenueCat.NET/1.0.0");
+        client.DefaultRequestHeaders.UserAgent.ParseAdd("RevenueCat.NET/2.0.1");
 
         return client;
     }

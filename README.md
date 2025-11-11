@@ -3,11 +3,12 @@
 [![NuGet](https://img.shields.io/nuget/v/RevenueCat.NET.svg)](https://www.nuget.org/packages/RevenueCat.NET/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-A professional, production-ready .NET 8 client library for the RevenueCat REST API v2.
+A professional, production-ready .NET 8 client library for the RevenueCat REST API v2. Built with Refit for type-safe, reliable HTTP communication.
 
 ## Features
 
 - **Complete API Coverage**: Full implementation of RevenueCat REST API v2 with 100+ endpoints
+- **Built with Refit**: Type-safe HTTP client with automatic request/response handling
 - **Modern .NET 8**: Built with latest C# features (primary constructors, records, file-scoped namespaces)
 - **SOLID Principles**: Clean architecture with dependency injection support
 - **Type-Safe**: Strong typing with nullable reference types and comprehensive models

@@ -1,3 +1,4 @@
+using Refit;
 using RevenueCat.NET.Models;
 using RevenueCat.NET.Models.Common;
 using RevenueCat.NET.Models.Customers;
@@ -15,64 +16,37 @@ public interface ICustomerService
     /// <summary>
     /// Lists all customers for a project.
     /// </summary>
-    /// <param name="projectId">The project ID.</param>
-    /// <param name="limit">Maximum number of items to return (default: 20, max: 100).</param>
-    /// <param name="startingAfter">Cursor for pagination.</param>
-    /// <param name="search">Search customers by email address.</param>
-    /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>A paginated list of customers.</returns>
-    /// <exception cref="ArgumentException">Thrown when projectId is null or whitespace.</exception>
-    /// <exception cref="RevenueCat.NET.Exceptions.RevenueCatException">Thrown when the API returns an error.</exception>
+    [Get("/v2/projects/{projectId}/customers")]
     Task<ListResponse<Customer>> ListAsync(
         string projectId,
-        int? limit = null,
-        string? startingAfter = null,
-        string? search = null,
+        [Query] int? limit = null,
+        [AliasAs("starting_after")] [Query] string? startingAfter = null,
+        [Query] string? search = null,
         CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Gets a specific customer by ID.
     /// </summary>
-    /// <param name="projectId">The project ID.</param>
-    /// <param name="customerId">The customer ID.</param>
-    /// <param name="expand">Optional fields to expand (e.g., "attributes", "active_entitlements").</param>
-    /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>The customer details.</returns>
-    /// <exception cref="ArgumentException">Thrown when projectId or customerId is null or whitespace.</exception>
-    /// <exception cref="RevenueCat.NET.Exceptions.RevenueCatResourceNotFoundException">Thrown when the customer is not found.</exception>
-    /// <exception cref="RevenueCat.NET.Exceptions.RevenueCatException">Thrown when the API returns an error.</exception>
+    [Get("/v2/projects/{projectId}/customers/{customerId}")]
     Task<Customer> GetAsync(
         string projectId,
         string customerId,
-        string[]? expand = null,
+        [Query(CollectionFormat.Multi)] string[]? expand = null,
         CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Creates a new customer.
     /// </summary>
-    /// <param name="projectId">The project ID.</param>
-    /// <param name="request">The customer creation request.</param>
-    /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>The created customer.</returns>
-    /// <exception cref="ArgumentException">Thrown when projectId is null or whitespace.</exception>
-    /// <exception cref="ArgumentNullException">Thrown when request is null.</exception>
-    /// <exception cref="RevenueCat.NET.Exceptions.RevenueCatConflictException">Thrown when a customer with the same ID already exists.</exception>
-    /// <exception cref="RevenueCat.NET.Exceptions.RevenueCatException">Thrown when the API returns an error.</exception>
+    [Post("/v2/projects/{projectId}/customers")]
     Task<Customer> CreateAsync(
         string projectId,
-        CreateCustomerRequest request,
+        [Body] CreateCustomerRequest request,
         CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Deletes a customer permanently.
     /// </summary>
-    /// <param name="projectId">The project ID.</param>
-    /// <param name="customerId">The customer ID to delete.</param>
-    /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>A deleted object confirmation.</returns>
-    /// <exception cref="ArgumentException">Thrown when projectId or customerId is null or whitespace.</exception>
-    /// <exception cref="RevenueCat.NET.Exceptions.RevenueCatResourceNotFoundException">Thrown when the customer is not found.</exception>
-    /// <exception cref="RevenueCat.NET.Exceptions.RevenueCatException">Thrown when the API returns an error.</exception>
+    [Delete("/v2/projects/{projectId}/customers/{customerId}")]
     Task<DeletedObject> DeleteAsync(
         string projectId,
         string customerId,
@@ -81,145 +55,87 @@ public interface ICustomerService
     /// <summary>
     /// Transfers customer data from one customer to another.
     /// </summary>
-    /// <param name="projectId">The project ID.</param>
-    /// <param name="customerId">The source customer ID.</param>
-    /// <param name="request">The transfer request containing the target customer ID and optional app IDs filter.</param>
-    /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>The transfer response with details about the operation.</returns>
-    /// <exception cref="ArgumentException">Thrown when projectId or customerId is null or whitespace.</exception>
-    /// <exception cref="ArgumentNullException">Thrown when request is null.</exception>
-    /// <exception cref="RevenueCat.NET.Exceptions.RevenueCatException">Thrown when the API returns an error.</exception>
+    [Post("/v2/projects/{projectId}/customers/{customerId}/actions/transfer")]
     Task<TransferResponse> TransferAsync(
         string projectId,
         string customerId,
-        TransferCustomerRequest request,
+        [Body] TransferCustomerRequest request,
         CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Lists all aliases for a customer.
     /// </summary>
-    /// <param name="projectId">The project ID.</param>
-    /// <param name="customerId">The customer ID.</param>
-    /// <param name="limit">Maximum number of items to return (default: 20, max: 100).</param>
-    /// <param name="startingAfter">Cursor for pagination.</param>
-    /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>A paginated list of customer aliases.</returns>
-    /// <exception cref="ArgumentException">Thrown when projectId or customerId is null or whitespace.</exception>
-    /// <exception cref="RevenueCat.NET.Exceptions.RevenueCatException">Thrown when the API returns an error.</exception>
+    [Get("/v2/projects/{projectId}/customers/{customerId}/aliases")]
     Task<ListResponse<CustomerAlias>> ListAliasesAsync(
         string projectId,
         string customerId,
-        int? limit = null,
-        string? startingAfter = null,
+        [Query] int? limit = null,
+        [AliasAs("starting_after")] [Query] string? startingAfter = null,
         CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Lists all attributes for a customer.
     /// </summary>
-    /// <param name="projectId">The project ID.</param>
-    /// <param name="customerId">The customer ID.</param>
-    /// <param name="limit">Maximum number of items to return (default: 20, max: 100).</param>
-    /// <param name="startingAfter">Cursor for pagination.</param>
-    /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>A paginated list of customer attributes.</returns>
-    /// <exception cref="ArgumentException">Thrown when projectId or customerId is null or whitespace.</exception>
-    /// <exception cref="RevenueCat.NET.Exceptions.RevenueCatException">Thrown when the API returns an error.</exception>
+    [Get("/v2/projects/{projectId}/customers/{customerId}/attributes")]
     Task<ListResponse<CustomerAttribute>> ListAttributesAsync(
         string projectId,
         string customerId,
-        int? limit = null,
-        string? startingAfter = null,
+        [Query] int? limit = null,
+        [AliasAs("starting_after")] [Query] string? startingAfter = null,
         CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Sets or updates customer attributes in bulk.
     /// </summary>
-    /// <param name="projectId">The project ID.</param>
-    /// <param name="customerId">The customer ID.</param>
-    /// <param name="request">The attributes to set or update.</param>
-    /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>The updated list of customer attributes.</returns>
-    /// <exception cref="ArgumentException">Thrown when projectId or customerId is null or whitespace.</exception>
-    /// <exception cref="ArgumentNullException">Thrown when request is null.</exception>
-    /// <exception cref="RevenueCat.NET.Exceptions.RevenueCatException">Thrown when the API returns an error.</exception>
+    [Post("/v2/projects/{projectId}/customers/{customerId}/attributes")]
     Task<ListResponse<CustomerAttribute>> SetAttributesAsync(
         string projectId,
         string customerId,
-        SetCustomerAttributesRequest request,
+        [Body] SetCustomerAttributesRequest request,
         CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Lists all active entitlements for a customer.
     /// </summary>
-    /// <param name="projectId">The project ID.</param>
-    /// <param name="customerId">The customer ID.</param>
-    /// <param name="limit">Maximum number of items to return (default: 20, max: 100).</param>
-    /// <param name="startingAfter">Cursor for pagination.</param>
-    /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>A paginated list of active entitlements.</returns>
-    /// <exception cref="ArgumentException">Thrown when projectId or customerId is null or whitespace.</exception>
-    /// <exception cref="RevenueCat.NET.Exceptions.RevenueCatException">Thrown when the API returns an error.</exception>
+    [Get("/v2/projects/{projectId}/customers/{customerId}/active_entitlements")]
     Task<ListResponse<CustomerEntitlement>> ListActiveEntitlementsAsync(
         string projectId,
         string customerId,
-        int? limit = null,
-        string? startingAfter = null,
+        [Query] int? limit = null,
+        [AliasAs("starting_after")] [Query] string? startingAfter = null,
         CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Lists virtual currency balances for a customer.
     /// </summary>
-    /// <param name="projectId">The project ID.</param>
-    /// <param name="customerId">The customer ID.</param>
-    /// <param name="includeEmptyBalances">Whether to include currencies with zero balance.</param>
-    /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>A list of virtual currency balances.</returns>
-    /// <exception cref="ArgumentException">Thrown when projectId or customerId is null or whitespace.</exception>
-    /// <exception cref="RevenueCat.NET.Exceptions.RevenueCatException">Thrown when the API returns an error.</exception>
+    [Get("/v2/projects/{projectId}/customers/{customerId}/virtual_currency_balances")]
     Task<ListResponse<VirtualCurrencyBalance>> ListVirtualCurrencyBalancesAsync(
         string projectId,
         string customerId,
-        bool? includeEmptyBalances = null,
+        [AliasAs("include_empty_balances")] [Query] bool? includeEmptyBalances = null,
         CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Creates a virtual currency transaction for a customer.
     /// </summary>
-    /// <param name="projectId">The project ID.</param>
-    /// <param name="customerId">The customer ID.</param>
-    /// <param name="request">The transaction request containing currency code and amount.</param>
-    /// <param name="idempotencyKey">Optional idempotency key to prevent duplicate transactions.</param>
-    /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>The updated virtual currency balance.</returns>
-    /// <exception cref="ArgumentException">Thrown when projectId or customerId is null or whitespace.</exception>
-    /// <exception cref="ArgumentNullException">Thrown when request is null.</exception>
-    /// <exception cref="RevenueCat.NET.Exceptions.RevenueCatException">Thrown when the API returns an error.</exception>
+    [Post("/v2/projects/{projectId}/customers/{customerId}/virtual_currency_transactions")]
     Task<VirtualCurrencyBalance> CreateVirtualCurrencyTransactionAsync(
         string projectId,
         string customerId,
-        CreateVirtualCurrencyTransactionRequest request,
-        string? idempotencyKey = null,
+        [Body] CreateVirtualCurrencyTransactionRequest request,
+        [Header("Idempotency-Key")] string? idempotencyKey = null,
         CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Updates a virtual currency balance for a customer.
     /// </summary>
-    /// <param name="projectId">The project ID.</param>
-    /// <param name="customerId">The customer ID.</param>
-    /// <param name="currencyCode">The currency code to update.</param>
-    /// <param name="request">The balance update request.</param>
-    /// <param name="idempotencyKey">Optional idempotency key to prevent duplicate updates.</param>
-    /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>The updated virtual currency balance.</returns>
-    /// <exception cref="ArgumentException">Thrown when projectId, customerId, or currencyCode is null or whitespace.</exception>
-    /// <exception cref="ArgumentNullException">Thrown when request is null.</exception>
-    /// <exception cref="RevenueCat.NET.Exceptions.RevenueCatException">Thrown when the API returns an error.</exception>
+    [Put("/v2/projects/{projectId}/customers/{customerId}/virtual_currency_balances/{currencyCode}")]
     Task<VirtualCurrencyBalance> UpdateVirtualCurrencyBalanceAsync(
         string projectId,
         string customerId,
         string currencyCode,
-        UpdateVirtualCurrencyBalanceRequest request,
-        string? idempotencyKey = null,
+        [Body] UpdateVirtualCurrencyBalanceRequest request,
+        [Header("Idempotency-Key")] string? idempotencyKey = null,
         CancellationToken cancellationToken = default);
 }
 
